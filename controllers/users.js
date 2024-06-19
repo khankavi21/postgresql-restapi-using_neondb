@@ -95,12 +95,23 @@ export const loginUser = async (req,res)=>{
     }
 }
 
-export const getUser = (req,res)=>{
+export const getUser = async(req,res)=>{
     const {id} = req.params;
 
-    const findUser = users.find((user)=> user.id === id);
+    try {
+        const result = await sql`SELECT id,name,email,created_at FROM users WHERE id = ${id}`
+        
+        if(result.length === 0){
+            return res.status(404).json({success:false,message : "User not found"})
+        }
+        
+        const user = result[0];
 
-    res.send(findUser);
+        res.status(200).json({success:true,user});
+    } catch (error) {
+       console.error('Error fetching user:',error);
+       res.status(500).json({success :false,message:"Internal server error"}); 
+    }
 }
 
 export const deleteUser = (req,res)=>{
