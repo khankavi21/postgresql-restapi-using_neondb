@@ -176,21 +176,5 @@ export const updateUser = async (req,res)=>{
 }
 
 
-// if(fields.length > 0){
-//     const result = await sql`
-//     UPDATE users
-//     SET ${sql(fields)} 
-//     WHERE id = ${id}
-//     RETURNING id,name,email,created_at;`;
 
-//     if(result.length === 0){
-//         return res.status(404).json({success:false , message : 'User not found'});
-//     }
-
-//     const updatedUser = result[0];
-//     res.status(200).json({success:true , user:updateUser});
-// }
-// else {
-//     res.status(400).json({ success: false, message: 'No valid fields to update' });
-// }
 
