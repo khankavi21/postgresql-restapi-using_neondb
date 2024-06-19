@@ -114,12 +114,21 @@ export const getUser = async(req,res)=>{
     }
 }
 
-export const deleteUser = (req,res)=>{
+export const deleteUser = async (req,res)=>{
     const {id} = req.params;
 
-    users = users.filter((user)=>user.id !== id);
+    try {
+        const result = await sql`DELETE FROM users WHERE id =${id} RETURNING *`;
 
-    res.send(`User with the id ${id} deleted from the database`)
+        if(result.length === 0){
+           return res.status(404).json({success : false , message:'User not found'});
+        }
+        
+        res.status(200).json({success:true,message :'User deleted successfully',user:result[0]});
+    } catch (error) {
+        console.error('Error deleting user:',error);
+        res.status(500).json({success:false,message:'Internal server error'});        
+    }
 }
 
 export const updateUser = (req,res)=>{
