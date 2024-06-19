@@ -131,26 +131,66 @@ export const deleteUser = async (req,res)=>{
     }
 }
 
-export const updateUser = (req,res)=>{
+export const updateUser = async (req,res)=>{
     const {id} = req.params;
-    const {firstName,lastName,age} = req.body;
+    const {name,email,password} = req.body;
 
-    const findUser = users.find((user)=> user.id === id);
+    try {
+        if(!name && !email && !password){
+            return res.status(400).json({success:false,message:'No fields to update'});
+        }
 
-    if(firstName){
-        findUser.firstName = firstName;
-    }
-    if(lastName){
-        findUser.lastName = lastName;
-    }
-    if(age){
-        findUser.age = age;
-    }
-    
-    res.send(`User with the id ${id} updated from the database`); 
-    
+        const fields = {}
+        if (name) {
+           fields.name = name;
+        }
+        if (email) {
+            fields.email = email;
+        }
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+            fields.password = hashedPassword;
+        }
+
+        const result = await sql`
+            UPDATE users
+            SET name=${fields.name},
+                email=${fields.email},
+                password=${fields.password}
+            WHERE id = ${id}
+            RETURNING id, name, email, created_at;
+        `;
+
+        if (result.length === 0) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const updatedUser = result[0];
+        res.status(200).json({ success: true, user: updatedUser });
+        
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    } 
 }
 
 
+// if(fields.length > 0){
+//     const result = await sql`
+//     UPDATE users
+//     SET ${sql(fields)} 
+//     WHERE id = ${id}
+//     RETURNING id,name,email,created_at;`;
 
+//     if(result.length === 0){
+//         return res.status(404).json({success:false , message : 'User not found'});
+//     }
+
+//     const updatedUser = result[0];
+//     res.status(200).json({success:true , user:updateUser});
+// }
+// else {
+//     res.status(400).json({ success: false, message: 'No valid fields to update' });
+// }
 
